@@ -9,3 +9,4 @@ langchain-huggingface==0.0.3
 sentence-transformers==3.0.1
 faiss-cpu
 numpy==1.26.4
+gunicorn
