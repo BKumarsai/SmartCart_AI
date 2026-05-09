@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartCart AI — AI Shopping Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070f;--s1:#0e0e1a;--s2:#13131f;--s3:#1a1a28;--s4:#21212f;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);--border3:rgba(255,255,255,0.18);
+  --accent:#ff6b35;--accent2:#ff9f1c;--accent3:#ffca44;
+  --purple:#a78bfa;--blue:#60a5fa;--green:#4ade80;--pink:#f472b6;
+  --text:#eaeaf5;--muted:#6a6a82;--muted2:#44445a;
+  --glow:rgba(255,107,53,0.15);--glow2:rgba(167,139,250,0.1);
+  --amazon:#ff9900;--flipkart:#2874f0;--meesho:#f43397;--ajio:#e8531f;--myntra:#ff3f6c;--croma:#1f8b4c;--nykaa:#fc2779;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;display:flex;flex-direction:column}
+
+body::before{content:'';position:fixed;width:800px;height:800px;background:radial-gradient(circle,rgba(255,107,53,.06) 0%,transparent 65%);top:-300px;right:-200px;border-radius:50%;pointer-events:none;animation:amb 10s ease-in-out infinite}
+body::after{content:'';position:fixed;width:600px;height:600px;background:radial-gradient(circle,rgba(167,139,250,.05) 0%,transparent 65%);bottom:-200px;left:-150px;border-radius:50%;pointer-events:none;animation:amb 14s ease-in-out infinite reverse}
+@keyframes amb{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+
+.hdr{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:13px 22px;border-bottom:1px solid var(--border);background:rgba(7,7,15,.9);backdrop-filter:blur(24px);z-index:20}
+.brand{display:flex;align-items:center;gap:11px}
+.logo{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#ff6b35,#ff9f1c);display:flex;align-items:center;justify-content:center;font-size:21px;box-shadow:0 0 28px var(--glow);flex-shrink:0;animation:pulse-logo 3s ease infinite}
+@keyframes pulse-logo{0%,100%{box-shadow:0 0 28px var(--glow)}50%{box-shadow:0 0 44px rgba(255,107,53,.35)}}
+.brand-name{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;background:linear-gradient(120deg,#ff6b35,#ff9f1c);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hdr-right{display:flex;align-items:center;gap:9px}
+.online{display:flex;align-items:center;gap:5px;background:rgba(74,222,128,.07);border:1px solid rgba(74,222,128,.16);padding:5px 10px;border-radius:20px;font-size:11px;color:var(--green)}
+.dot{width:6px;height:6px;background:var(--green);border-radius:50%;animation:blink 2s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.btn-clear{background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-family:'DM Sans',sans-serif;transition:all .2s;display:flex;align-items:center;gap:4px}
+.btn-clear:hover{background:rgba(255,100,100,.08);border-color:rgba(255,100,100,.25);color:#ff8080}
+
+.tools-bar{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:8px 22px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;background:rgba(7,7,15,.6)}
+.tools-bar::-webkit-scrollbar{display:none}
+.tool-tag{display:flex;align-items:center;gap:4px;background:var(--s2);border:1px solid var(--border);padding:4px 10px;border-radius:20px;font-size:10.5px;color:var(--muted);white-space:nowrap}
+.tool-tag span{font-size:12px}
+
+.chips{flex-shrink:0;display:flex;gap:6px;padding:10px 22px;overflow-x:auto;border-bottom:1px solid var(--border);scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{background:var(--s2);border:1px solid var(--border);color:var(--muted);padding:5px 13px;border-radius:20px;font-size:11.5px;cursor:pointer;white-space:nowrap;transition:all .2s;font-family:'DM Sans',sans-serif}
+.chip:hover{border-color:var(--accent);color:var(--accent);background:rgba(255,107,53,.06);transform:translateY(-1px)}
+
+.chat{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:13px;scroll-behavior:smooth}
+.chat::-webkit-scrollbar{width:3px}
+.chat::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:2px}
+
+.welcome{text-align:center;padding:28px 16px;animation:up .5s ease both}
+.w-icon{font-size:48px;display:block;margin-bottom:12px;filter:drop-shadow(0 0 20px rgba(255,107,53,.4))}
+.welcome h2{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;margin-bottom:8px;background:linear-gradient(135deg,#ff6b35,#ffb347,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.welcome p{color:#44445a;font-size:13.5px;max-width:340px;margin:0 auto;line-height:1.7}
+.w-cards{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-top:20px}
+.w-card{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:13px 14px;cursor:pointer;text-align:left;width:145px;transition:all .25s}
+.w-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 12px 28px var(--glow)}
+.w-card-icon{font-size:20px;margin-bottom:6px}
+.w-card-title{font-size:12px;font-weight:600;color:var(--text)}
+.w-card-desc{font-size:10.5px;color:var(--muted2);margin-top:2px}
+
+.feature-pills{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:14px}
+.fp{background:var(--s3);border:1px solid var(--border2);padding:4px 11px;border-radius:20px;font-size:11px;color:var(--muted)}
+
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg{display:flex;align-items:flex-start;gap:8px;animation:up .28s ease both}
+.msg.user{flex-direction:row-reverse;margin-left:auto;max-width:70%}
+.msg.bot{margin-right:auto;max-width:85%}
+.av{width:31px;height:31px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:2px}
+.av.bot{background:var(--s3);border:1px solid var(--border2)}
+.av.user{background:linear-gradient(135deg,#ff6b35,#ff9f1c)}
+.bubble{padding:10px 14px;border-radius:15px;font-size:13px;line-height:1.72;max-width:100%;word-break:break-word}
+.bubble.bot{background:var(--s2);border:1px solid var(--border2);border-top-left-radius:4px;color:var(--text)}
+.bubble.user{background:linear-gradient(135deg,#ff6b35,#ff9f1c);border-top-right-radius:4px;color:#fff}
+
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;padding:2px 8px;border-radius:10px;margin-bottom:7px;font-weight:500;letter-spacing:.2px}
+.badge.products{background:rgba(255,107,53,.1);color:#ff7a45;border:1px solid rgba(255,107,53,.18)}
+.badge.chitchat{background:rgba(167,139,250,.1);color:#b39dfc;border:1px solid rgba(167,139,250,.18)}
+.badge.offtopic{background:rgba(255,100,100,.1);color:#ff8080;border:1px solid rgba(255,100,100,.18)}
+
+.typing{display:flex;align-items:center;gap:5px;padding:11px 14px}
+.typing span{width:6px;height:6px;background:#33334a;border-radius:50%;animation:bounce 1.2s ease infinite}
+.typing span:nth-child(2){animation-delay:.16s}
+.typing span:nth-child(3){animation-delay:.32s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+
+.input-area{flex-shrink:0;padding:12px 22px 16px;border-top:1px solid var(--border);background:rgba(7,7,15,.9);backdrop-filter:blur(24px)}
+.input-wrap{display:flex;align-items:flex-end;gap:8px;background:var(--s2);border:1px solid var(--border2);border-radius:14px;padding:8px 10px;transition:border-color .2s,box-shadow .2s}
+.input-wrap:focus-within{border-color:rgba(255,107,53,.38);box-shadow:0 0 0 3px rgba(255,107,53,.06)}
+#inp{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;resize:none;line-height:1.55;min-height:21px;max-height:90px;overflow-y:auto}
+#inp::placeholder{color:var(--muted2)}
+#inp::-webkit-scrollbar{display:none}
+#send{width:34px;height:34px;border:none;border-radius:9px;cursor:pointer;background:linear-gradient(135deg,#ff6b35,#ff9f1c);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:15px;transition:all .2s}
+#send:hover{transform:scale(1.06);box-shadow:0 4px 16px var(--glow)}
+#send:disabled{opacity:.3;cursor:not-allowed;transform:none}
+.hint{text-align:center;font-size:10.5px;color:#2a2a3a;margin-top:6px}
+
+.bubble.bot strong{color:#ffb066;font-weight:600}
+.bubble.bot em{color:#a0a0b5;font-style:italic}
+.bubble.bot code{background:var(--s4);padding:1px 5px;border-radius:4px;font-size:12px;color:#7dd3fc;font-family:monospace}
+.bubble.bot hr{border:none;border-top:1px solid var(--border);margin:8px 0}
+
+.prod-card{background:var(--s3);border:1px solid var(--border2);border-radius:10px;padding:11px 13px;margin:8px 0;transition:border-color .2s}
+.prod-card:hover{border-color:rgba(255,107,53,.3)}
+.prod-card .pc-name{font-weight:600;color:var(--text);font-size:13px}
+.prod-card .pc-price{color:var(--accent2);font-weight:700;font-size:14px;margin-top:3px}
+.prod-card .pc-meta{color:var(--muted);font-size:11.5px;margin-top:2px}
+
+.ecom-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ecom-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:8px;font-size:11.5px;font-weight:500;text-decoration:none;border:1px solid transparent;transition:all .2s;cursor:pointer;font-family:'DM Sans',sans-serif}
+.ecom-btn:hover{transform:translateY(-1px);filter:brightness(1.15)}
+.ecom-btn.amazon{background:rgba(255,153,0,.12);border-color:rgba(255,153,0,.25);color:#ffb733}
+.ecom-btn.flipkart{background:rgba(40,116,240,.12);border-color:rgba(40,116,240,.25);color:#60a5fa}
+.ecom-btn.meesho{background:rgba(244,51,151,.12);border-color:rgba(244,51,151,.25);color:#f472b6}
+.ecom-btn.ajio{background:rgba(232,83,31,.12);border-color:rgba(232,83,31,.25);color:#fb923c}
+.ecom-btn.myntra{background:rgba(255,63,108,.12);border-color:rgba(255,63,108,.25);color:#fb7185}
+.ecom-btn.croma{background:rgba(31,139,76,.12);border-color:rgba(31,139,76,.25);color:#4ade80}
+.ecom-btn.nykaa{background:rgba(252,39,121,.12);border-color:rgba(252,39,121,.25);color:#f9a8d4}
+.ecom-btn.snapdeal{background:rgba(255,100,0,.12);border-color:rgba(255,100,0,.25);color:#fdba74}
+
+.stars{color:#fbbf24;letter-spacing:1px}
+.bubble.bot table{width:100%;border-collapse:collapse;margin:6px 0;font-size:12px}
+.bubble.bot td,.bubble.bot th{padding:4px 8px;border:1px solid var(--border);text-align:left}
+.bubble.bot th{background:var(--s3);color:var(--muted);font-weight:500}
+.bubble.bot tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="brand">
+    <div class="logo">🛒</div>
+    <div>
+      <div class="brand-name">SmartCart AI</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="online"><div class="dot"></div>Online</div>
+    <button class="btn-clear" onclick="clearChat()">🗑 Clear</button>
+  </div>
+</div>
+
+<!-- TOOLS BAR -->
+<div class="tools-bar">
+  <div class="tool-tag"><span>🔍</span> Product Search</div>
+  <div class="tool-tag"><span>⭐</span> Reviews</div>
+  <div class="tool-tag"><span>🏷️</span> Brand Advisor</div>
+  <div class="tool-tag"><span>🔗</span> Live Links</div>
+  <div class="tool-tag"><span>📦</span> Policy Search</div>
+  <div class="tool-tag"><span>🚫</span> Off-topic Guard</div>
+</div>
+
+<!-- QUICK CHIPS -->
+<div class="chips">
+  <div class="chip" onclick="q('Show me smartphones under ₹25000')">📱 Phones</div>
+  <div class="chip" onclick="q('Best laptops for college students under ₹50000')">💻 Laptops</div>
+  <div class="chip" onclick="q('Nike vs Adidas shoes — which brand is better?')">👟 Shoes</div>
+  <div class="chip" onclick="q('Reviews for Sony WH-1000XM5 headphones')">🎧 Reviews</div>
+  <div class="chip" onclick="q('I don\\'t know which brand to pick for earbuds')">🏷️ Brand Help</div>
+  <div class="chip" onclick="q('What is your return policy?')">↩️ Returns</div>
+  <div class="chip" onclick="q('Best smartwatch under ₹3000')">⌚ Watches</div>
+  <div class="chip" onclick="q('Show me women kurtas in cotton')">👗 Clothing</div>
+  <div class="chip" onclick="q('Buy links for iPhone 15')">🔗 Buy Links</div>
+  <div class="chip" onclick="q('Best skincare products under ₹500')">✨ Beauty</div>
+</div>
+
+<!-- CHAT -->
+<div class="chat" id="chat">
+  <div class="welcome" id="welcome">
+    <span class="w-icon">🛒</span>
+    <h2>Hey! I'm SmartCart AI</h2>
+    <p>Your AI shopping assistant — search products, check reviews, compare brands & get real buy links.</p>
+    <div class="feature-pills">
+      <div class="fp">⚡ Groq-powered</div>
+      <div class="fp">🔗 Amazon · Flipkart · Meesho · Ajio · Myntra</div>
+      <div class="fp">⭐ Real reviews</div>
+      <div class="fp">🏷️ Brand advisor</div>
+      <div class="fp">🚫 Shopping only</div>
+    </div>
+    <div class="w-cards">
+      <div class="w-card" onclick="q('What phones do you have under ₹25000?')">
+        <div class="w-card-icon">📱</div>
+        <div class="w-card-title">Search Products</div>
+        <div class="w-card-desc">Browse catalog</div>
+      </div>
+      <div class="w-card" onclick="q('Reviews for Samsung Galaxy S24')">
+        <div class="w-card-icon">⭐</div>
+        <div class="w-card-title">Check Reviews</div>
+        <div class="w-card-desc">Ratings & pros/cons</div>
+      </div>
+      <div class="w-card" onclick="q('I don\\'t know which brand is good for laptops')">
+        <div class="w-card-icon">🏷️</div>
+        <div class="w-card-title">Brand Advisor</div>
+        <div class="w-card-desc">Find the right brand</div>
+      </div>
+      <div class="w-card" onclick="q('Give me buy links for Nike Air Max')">
+        <div class="w-card-icon">🔗</div>
+        <div class="w-card-title">Buy Links</div>
+        <div class="w-card-desc">Amazon · Flipkart+</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INPUT -->
+<div class="input-area">
+  <div class="input-wrap">
+    <textarea id="inp" placeholder="Search products, check reviews, compare brands..." rows="1"></textarea>
+    <button id="send" onclick="send()">➤</button>
+  </div>
+  <div class="hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+</div>
+
+<script>
+const chat    = document.getElementById('chat');
+const inp     = document.getElementById('inp');
+const sendBtn = document.getElementById('send');
+const welcome = document.getElementById('welcome');
+let welcomed  = false;
+
+inp.addEventListener('input', () => {
+  inp.style.height = 'auto';
+  inp.style.height = Math.min(inp.scrollHeight, 90) + 'px';
+});
+inp.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+
+function q(t) { inp.value = t; send(); }
+
+function hideWelcome() {
+  if (!welcomed) { welcome.style.display = 'none'; welcomed = true; }
+}
+
+function renderMarkdown(text) {
+  text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g, (_, label, url) => {
+    const u = url.toLowerCase();
+    let cls = 'ecom-btn';
+    let icon = '🔗';
+    if (u.includes('amazon.in'))       { cls += ' amazon';   icon = '🛒'; }
+    else if (u.includes('flipkart'))   { cls += ' flipkart'; icon = '🔵'; }
+    else if (u.includes('meesho'))     { cls += ' meesho';   icon = '🩷'; }
+    else if (u.includes('ajio'))       { cls += ' ajio';     icon = '🟠'; }
+    else if (u.includes('myntra'))     { cls += ' myntra';   icon = '🔴'; }
+    else if (u.includes('croma'))      { cls += ' croma';    icon = '🟢'; }
+    else if (u.includes('nykaa'))      { cls += ' nykaa';    icon = '💄'; }
+    else if (u.includes('snapdeal'))   { cls += ' snapdeal'; icon = '🟡'; }
+    else                               { cls += ' amazon';   }
+    return `<a href="${url}" target="_blank" rel="noopener" class="${cls}">${icon} ${label}</a>`;
+  });
+
+  const tableRx = /((?:\|.+\|\n?)+)/g;
+  text = text.replace(tableRx, (match) => {
+    const rows = match.trim().split('\n').filter(r => r.trim());
+    if (rows.length < 2) return match;
+    let html = '<table>';
+    rows.forEach((row, i) => {
+      const cells = row.split('|').filter(c => c.trim() !== '');
+      if (i === 1 && cells.every(c => /^[-: ]+$/.test(c))) return;
+      const tag = i === 0 ? 'th' : 'td';
+      html += '<tr>' + cells.map(c => `<${tag}>${c.trim()}</${tag}>`).join('') + '</tr>';
+    });
+    html += '</table>';
+    return html;
+  });
+
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  text = text.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  text = text.replace(/^---$/gm, '<hr>');
+  text = text.replace(/^[•·]\s(.+)$/gm, '<div style="padding-left:4px;margin:2px 0">• $1</div>');
+  text = text.replace(/^[-]\s(.+)$/gm, '<div style="padding-left:4px;margin:2px 0">• $1</div>');
+  text = text.replace(/\n/g, '<br>');
+  return text;
+}
+
+function addMsg(text, role, type = '') {
+  hideWelcome();
+  const wrap = document.createElement('div');
+  wrap.className = `msg ${role}`;
+
+  const av = document.createElement('div');
+  av.className = `av ${role}`;
+  av.textContent = role === 'bot' ? '🛒' : '👤';
+
+  const bub = document.createElement('div');
+  bub.className = `bubble ${role}`;
+
+  if (role === 'bot' && type) {
+    const b = document.createElement('div');
+    b.className = `badge ${type}`;
+    const labels = {
+      products: '🛒 Product Search',
+      chitchat: '💬 Chat',
+      offtopic: '🚫 Off-topic'
+    };
+    b.textContent = labels[type] || type;
+    bub.appendChild(b);
+  }
+
+  const t = document.createElement('div');
+  t.innerHTML = role === 'bot' ? renderMarkdown(text) : escapeHtml(text);
+  bub.appendChild(t);
+
+  wrap.appendChild(av);
+  wrap.appendChild(bub);
+  chat.appendChild(wrap);
+  scroll();
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function addTyping() {
+  hideWelcome();
+  const w  = document.createElement('div');
+  w.className = 'msg bot'; w.id = 'typing';
+  const av = document.createElement('div'); av.className = 'av bot'; av.textContent = '🛒';
+  const b  = document.createElement('div'); b.className = 'bubble bot typing';
+  b.innerHTML = '<span></span><span></span><span></span>';
+  w.appendChild(av); w.appendChild(b);
+  chat.appendChild(w); scroll();
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing');
+  if (el) el.remove();
+}
+
+function scroll() { chat.scrollTop = chat.scrollHeight; }
+
+async function send() {
+  const txt = inp.value.trim();
+  if (!txt || sendBtn.disabled) return;
+  inp.value = ''; inp.style.height = 'auto';
+  addMsg(txt, 'user');
+  sendBtn.disabled = true;
+  addTyping();
+  try {
+    const res = await fetch('/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: txt })
+    });
+    const d = await res.json();
+    removeTyping();
+    addMsg(d.response || d.error, 'bot', d.type);
+  } catch (e) {
+    removeTyping();
+    addMsg('⚠️ Connection error. Please try again.', 'bot', 'chitchat');
+  }
+  sendBtn.disabled = false;
+  inp.focus();
+}
+
+async function clearChat() {
+  await fetch('/clear', { method: 'POST' });
+  chat.querySelectorAll('.msg').forEach(m => m.remove());
+  welcome.style.display = 'block'; welcomed = false;
+}
+
+inp.focus();
+</script>
+</body>
+</html>
