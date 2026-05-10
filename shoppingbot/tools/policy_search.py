@@ -4,8 +4,8 @@ from langchain.tools import tool
 from langchain_community.vectorstores import FAISS
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from shoppingbot.config import EMBEDDINGS, DATA_TEXT_PATH, STORE_DIRECTORY
-
+from shoppingbot.config import get_embeddings
+EMBEDDINGS = get_embeddings()
 
 class VectorStoreManager:
     def __init__(self):
