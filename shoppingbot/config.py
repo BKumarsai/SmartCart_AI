@@ -13,8 +13,12 @@ DATA_TEXT_PATH    = os.path.join(BASE_DIR, "data", "policy.txt")
 STORE_DIRECTORY   = os.path.join(BASE_DIR, "data", "faiss_store")
 
 # Faster embeddings model
-EMBEDDINGS = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-MiniLM-L6-v2",
-    model_kwargs={"device": "cpu"},
-    encode_kwargs={"normalize_embeddings": True},
-)
+try:
+    EMBEDDINGS = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/all-MiniLM-L6-v2",
+        model_kwargs={"device": "cpu"},
+        encode_kwargs={"normalize_embeddings": True},
+    )
+except Exception as e:
+    print(f"Embeddings loading failed: {e}")
+    EMBEDDINGS = None
