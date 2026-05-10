@@ -2,11 +2,11 @@ from langchain.tools import tool
 import urllib.parse
 
 PLATFORMS = {
-    "amazon":   "https://www.amazon.in/s?k={query}&ref=shopbot",
-    "flipkart": "https://www.flipkart.com/search?q={query}&otracker=search",
+    "amazon":   "https://www.amazon.in/s?k={query}",
+    "flipkart": "https://www.flipkart.com/search?q={query}",
     "meesho":   "https://www.meesho.com/search?q={query}",
     "ajio":     "https://www.ajio.com/search/?text={query}",
-    "myntra":   "https://www.myntra.com/{query}",
+    "myntra":   "https://www.myntra.com/search?q={query}",
     "snapdeal": "https://www.snapdeal.com/search?keyword={query}",
     "nykaa":    "https://www.nykaa.com/search/result/?q={query}",
     "croma":    "https://www.croma.com/searchB?q={query}",

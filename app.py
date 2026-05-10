@@ -1,8 +1,11 @@
 from flask import Flask, render_template, request, jsonify
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env file explicitly
+load_dotenv(override=True)
+
+
 
 from shoppingbot.router.semantic_router import (
     SemanticRouter, PRODUCT_ROUTE_NAME, CHITCHAT_ROUTE_NAME, OFFTOPIC_ROUTE_NAME
@@ -13,12 +16,19 @@ from langchain_groq import ChatGroq
 from langchain.memory import ConversationBufferMemory
 
 # ─── Setup ────────────────────────────────────────────────────────────────────
+GROQ_KEY = os.getenv("GROQ_API_KEY")
+if not GROQ_KEY:
+    raise ValueError("GROQ_API_KEY not found! Check your .env file")
 LLM = ChatGroq(
     temperature=0.3,
-    model_name=os.getenv("LLM_MODEL", "llama-3.3-70b-versatile"),
-    groq_api_key=os.getenv("GROQ_API_KEY")
+    model_name=os.getenv("LLM_MODEL", "llama-3.1-8b-instant"),
+    groq_api_key=GROQ_KEY
 )
-SHARED_MEMORY   = ConversationBufferMemory(return_messages=True)
+SHARED_MEMORY = ConversationBufferMemory(
+    return_messages=True,
+    memory_key="chat_history",
+    input_key="input",
+)
 SEMANTIC_ROUTER = SemanticRouter()
 
 OFF_TOPIC_MSG = (
@@ -35,6 +45,8 @@ app = Flask(__name__)
 
 # ─── Core Handler ─────────────────────────────────────────────────────────────
 def handle_query(query: str) -> dict:
+    content = "Sorry, I didn't understand that. Could you rephrase?"
+    
     try:
         guided_route = SEMANTIC_ROUTER.guide(query)
     except Exception:
@@ -44,33 +56,67 @@ def handle_query(query: str) -> dict:
         return {"response": OFF_TOPIC_MSG, "type": "offtopic"}
 
     elif guided_route == CHITCHAT_ROUTE_NAME:
-        chain    = create_chitchat_chain(LLM, SHARED_MEMORY)
-        response = chain.invoke({"input": query})
-        content  = response.get("response", str(response))
+        try:
+            chain    = create_chitchat_chain(LLM, SHARED_MEMORY)
+            response = chain.invoke({"input": query})
+            content  = response.get("response", str(response))
+        except Exception as e:
+            content = f"Sorry I had an issue: {str(e)}"
 
     elif guided_route == PRODUCT_ROUTE_NAME:
-        agent    = ShoppingAgent(LLM, SHARED_MEMORY)
-        response = agent.invoke(query)
-        content  = (
-            response.content if hasattr(response, "content")
-            else response.get("output", str(response))
-        )
-    else:
-        content = "Sorry, I didn't understand that. Could you rephrase?"
+        try:
+            # Build conversation history string
+            messages = SHARED_MEMORY.chat_memory.messages
+            history = ""
+            for msg in messages[-10:]:
+                role = "Customer" if msg.type == "human" else "ShopBot"
+                history += f"{role}: {msg.content}\n"
 
-    SHARED_MEMORY.chat_memory.add_user_message(query)
-    SHARED_MEMORY.chat_memory.add_ai_message(content)
+            # Add context to query if it seems like a follow-up
+            follow_up_words = [
+                "first one", "that", "it", "those", "this",
+                "the same", "above", "previous", "last one",
+                "price of", "link for", "buy that", "show links",
+                "where to buy", "how much"
+            ]
+
+            is_followup = any(w in query.lower() for w in follow_up_words)
+
+            if is_followup and history:
+                enhanced_query = f"""Previous conversation:
+{history}
+
+Current question: {query}
+
+Based on the conversation above, answer the current question."""
+            else:
+                enhanced_query = query
+
+            agent    = ShoppingAgent(LLM, SHARED_MEMORY)
+            response = agent.invoke(enhanced_query)
+            content  = (
+                response.content if hasattr(response, "content")
+                else response.get("output", str(response))
+            )
+        except Exception as e:
+            content = f"Sorry I had an issue: {str(e)}"
+
+    # Save to memory
+    try:
+        SHARED_MEMORY.chat_memory.add_user_message(query)
+        SHARED_MEMORY.chat_memory.add_ai_message(content)
+    except Exception:
+        pass
 
     return {"response": content, "type": guided_route}
 
-# ─── Routes ───────────────────────────────────────────────────────────────────
 @app.route("/")
 def home():
     return render_template("index.html")
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data         = request.get_json()
+    data = request.get_json()
     user_message = data.get("message", "").strip()
     if not user_message:
         return jsonify({"error": "Empty message"}), 400
@@ -84,9 +130,5 @@ def clear_chat():
 
 if __name__ == "__main__":
     print("\n🛍️  ShoppingBot Pro — Groq Edition")
-    print("⚡  LLaMA 3 70B · Semantic Router · 5 AI Tools")
-    print("🔗  Real Amazon · Flipkart · Meesho · Ajio · Myntra links")
-    print("⭐  Product reviews · Brand advisor · Policy search")
     print("✅  Ready → http://localhost:5000\n")
-    app.run(debug=True, host="0.0.0.0", port=5000)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))

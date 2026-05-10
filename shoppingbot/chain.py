@@ -20,6 +20,8 @@ def create_chitchat_chain(llm, memory):
     return ConversationChain(
         llm=llm,
         memory=memory,
+        memory_key="chat_history",
         prompt=CHITCHAT_PROMPT,
+        input_key="input",
         verbose=False
     )

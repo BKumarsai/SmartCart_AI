@@ -1,8 +1,8 @@
 import os
 from dotenv import load_dotenv
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
-load_dotenv()
+load_dotenv(override=True)
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
@@ -12,8 +12,7 @@ DATA_PRODUCT_PATH = os.path.join(BASE_DIR, "data", "products.db")
 DATA_TEXT_PATH    = os.path.join(BASE_DIR, "data", "policy.txt")
 STORE_DIRECTORY   = os.path.join(BASE_DIR, "data", "faiss_store")
 
-# Free local embeddings — no API key needed, runs on CPU
-# Downloads ~90MB model on first run, then cached locally
+# Faster embeddings model
 EMBEDDINGS = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-MiniLM-L6-v2",
     model_kwargs={"device": "cpu"},

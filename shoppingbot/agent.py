@@ -98,7 +98,7 @@ class ShoppingAgent:
 
             messages = self.memory.chat_memory.messages
             history  = ""
-            for msg in messages[-6:]:
+            for msg in messages[-10:]:
                 role     = "Customer" if msg.type == "human" else "ShopBot"
                 history += f"{role}: {msg.content}\n"
 
@@ -106,11 +106,28 @@ class ShoppingAgent:
                 agent=agent,
                 tools=self.tools,
                 verbose=False,
-                max_iterations=25, max_execution_time=60,
-                handle_parsing_errors=True
+                max_iterations=20,
+                max_execution_time=60,
+                handle_parsing_errors=True,
             )
             result = executor.invoke({"input": query, "chat_history": history})
+
+            # Check if result contains error message
+            output = result.get("output", "")
+            if "iteration limit" in output or "time limit" in output or not output:
+                raise ValueError("Agent hit limit")
+
             return result
 
-        except Exception as e:
-            return {"output": f"⚠️ I ran into an issue. Could you rephrase? *(Error: {str(e)})*"}
+        except Exception:
+            # Fallback — answer directly without tools
+            try:
+                simple_response = self.llm.invoke(
+                    f"""You are ShopBot, a professional Indian shopping assistant.
+Answer this shopping question helpfully with product recommendations,
+prices in ₹, and buying tips. Be detailed and use emojis.
+Question: {query}"""
+                )
+                return {"output": simple_response.content}
+            except Exception as e2:
+                return {"output": f"⚠️ Sorry, please try again. Error: {str(e2)}"}
